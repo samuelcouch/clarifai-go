@@ -1,10 +1,18 @@
 package: main
 import:
-  - package: github.com/gorilla/mux
-    repo:    https://github.com/gorilla/mux
-    vcs:     git
   - package: github.com/go-kit/kit
     repo:    https://github.com/go-kit/kit
     vcs:     git
     subpackages:
       - /endpoint
+      - /log
+      - /transport/http
+  - package: golang.org/x/net
+    subpackages:
+      - /content
+  - package: gopkg.in/logfmt.v0
+  - package: gopkg.in/stack.v1
+  - package: github.com/gorilla/mux
+    repo:    https://github.com/gorilla/mux
+    vcs:     git
+  - package: github.com/gorilla/context
