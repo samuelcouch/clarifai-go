@@ -1,1 +1,7 @@
+*~
+*#
+*.sw[op]
+TAGS
+
+# Go vendoring directories.
 vendor/
