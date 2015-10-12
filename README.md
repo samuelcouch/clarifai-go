@@ -24,16 +24,25 @@ Go wiki page on [vendoring tools](https://github.com/golang/go/wiki/PackageManag
 Quick summary of what you need to know:
 
 * Add this to your .bash\_profile: `export GO15VENDOREXPERIMENT=1`
-
 * We’re using [Glide](https://github.com/Masterminds/glide) to handle importing and updating
 vendored packages.  When adding a new dependency, instead of `go get <package>`, do
 `glide get <package>`
-
 * After checking out or pulling new code from a Clarifai repo, before building you need to install
 the dependencies with:
 `glide install`
 
-# Recommended reading
+## Running Go programs in Docker containers
+
+First read [https://blog.golang.org/docker](https://blog.golang.org/docker).
+The standard approach is to build the Go program inside the container.  The docker image
+needs to have the Go tools installed.  Note that if using vendoring tools like Glide, those
+need to be installed as well.
+
+See this example
+[Dockerfile](https://github.com/Clarifai/clarifai-go/blob/master/apinext/Dockerfile).
+
+
+## Recommended reading
 
 ### Style guides:
 * [Effective Go](https://golang.org/doc/effective_go.html).
@@ -42,7 +51,7 @@ the dependencies with:
   (like a style guide but not).
 
 ### Tutorials
-* https://tour.golang.org
+* Official tour: [tour.golang.org](https://tour.golang.org)
 * Go for pythonistas:  [slides](https://talks.golang.org/2013/go4python.slide#1),
   [talk](https://www.youtube.com/watch?v=elu0VpLzJL8).
 
@@ -56,17 +65,17 @@ the dependencies with:
 concurrency primitives together for coordinating asynchronous work.
 
 ### Testimonials
+*  The Facebook Parse team wrote a few articles on
+[rewriting their API in Go from Ruby](http://blog.parse.com/learn/how-we-moved-our-api-from-ruby-to-go-and-saved-our-sanity/) and
+[their open source contributions](http://blog.parse.com/learn/parse-loves-go/)
 * Author of Glide on [why he likes Go](http://engineeredweb.com//blog/2013/why-go-excellent-programming-language/)
 
-# Tips, tricks and topics.
+## Tips, tricks, and tools.
 
 * Use the [Go Playground](https://play.golang.org/) for experimenting and sharing code snippets.
-
 * [Build constraints](https://golang.org/pkg/go/build/#pkg-overview). Can also use for testing.
-
 * Static analysis tools
-   * go vet
-   * go fmt
-   * go golint
-
-* Really cool [commandline tool helper](https://github.com/codegangsta/cli).  Handles flags, help, bash complete.
+    * go vet
+    * go fmt
+    * go golint
+* Really cool [commandline tool helper](https://github.com/codegangsta/cli). Handles flags, help, bash complete.
