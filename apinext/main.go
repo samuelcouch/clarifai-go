@@ -95,6 +95,25 @@ func makeRoutes(ctx context.Context, service ClarifaiApiService) *Routes {
 	return &routes
 }
 
+func makeRouter(ctx context.Context, service ClarifaiApiService) *mux.Router {
+	router := mux.NewRouter().StrictSlash(true)
+	routes := makeRoutes(ctx, service)
+	for _, route := range *routes {
+		router.
+			Methods(route.Method).
+			Path(route.Pattern).
+			Name(route.Name).
+			Handler(route.Handler)
+	}
+
+	// FIXME
+	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "Hello %q", html.EscapeString(r.URL.Path))
+	})
+
+	return router
+}
+
 func main() {
 	var (
 		listen = flag.String("listen", ":8080", "HTTP port")
@@ -110,20 +129,7 @@ func main() {
 	service = clarifaiApiService{}
 	service = loggingMiddleware(logger)(service)
 
-	router := mux.NewRouter().StrictSlash(true)
-	routes := makeRoutes(ctx, service)
-	for _, route := range *routes {
-		router.
-			Methods(route.Method).
-			Path(route.Pattern).
-			Name(route.Name).
-			Handler(route.Handler)
-	}
-
-	// FIXME
-	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Hello %q", html.EscapeString(r.URL.Path))
-	})
+	router := makeRouter(ctx, service)
 
 	_ = logger.Log("msg", "HTTP", "addr", *listen)
 	_ = logger.Log("err", http.ListenAndServe(*listen, router))
