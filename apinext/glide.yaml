@@ -15,4 +15,5 @@ import:
   - package: github.com/gorilla/mux
     repo:    https://github.com/gorilla/mux
     vcs:     git
+  - package: github.com/zenazn/goji
   - package: github.com/gorilla/context

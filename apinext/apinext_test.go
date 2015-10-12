@@ -12,6 +12,10 @@ import (
 	"golang.org/x/net/context"
 )
 
+// TODO(madadam):
+// * boilerplate to set up handlers
+// * json validation helpers, check key exists.
+
 func TestRootHandler(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/", nil)
 	recorder := httptest.NewRecorder()
@@ -19,7 +23,8 @@ func TestRootHandler(t *testing.T) {
 	ctx := context.Background()
 	var service ClarifaiApiService
 	service = clarifaiApiService{}
-	router := makeRouter(ctx, service)
+	//router := makeGorillaRouter(ctx, service)
+	router := makeGojiRouter(ctx, service)
 
 	router.ServeHTTP(recorder, req)
 	if recorder.Code != http.StatusOK {
@@ -39,7 +44,8 @@ func TestPostImage(t *testing.T) {
 	ctx := context.Background()
 	var service ClarifaiApiService
 	service = clarifaiApiService{}
-	router := makeRouter(ctx, service)
+	//router := makeGorillaRouter(ctx, service)
+	router := makeGojiRouter(ctx, service)
 
 	router.ServeHTTP(recorder, req)
 
@@ -50,7 +56,6 @@ func TestPostImage(t *testing.T) {
 	var responseData map[string]interface{}
 	responseBytes, _ := ioutil.ReadAll(recorder.Body)
 	_ = json.Unmarshal([]byte(responseBytes), &responseData)
-	// FIXME validation helpers, check key exists.
 	if responseData["uri"] != expectedUri {
 		t.Errorf("Didn't get expected response['uri'] %v != %v", responseData["uri"], expectedUri)
 	}

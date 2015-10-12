@@ -15,6 +15,7 @@ import (
 	"github.com/go-kit/kit/log"
 	httptransport "github.com/go-kit/kit/transport/http"
 	"github.com/gorilla/mux"
+	"github.com/zenazn/goji"
 )
 
 type ClarifaiApiService interface {
@@ -95,7 +96,7 @@ func makeRoutes(ctx context.Context, service ClarifaiApiService) *Routes {
 	return &routes
 }
 
-func makeRouter(ctx context.Context, service ClarifaiApiService) *mux.Router {
+func makeGorillaRouter(ctx context.Context, service ClarifaiApiService) http.Handler {
 	router := mux.NewRouter().StrictSlash(true)
 	routes := makeRoutes(ctx, service)
 	for _, route := range *routes {
@@ -106,7 +107,6 @@ func makeRouter(ctx context.Context, service ClarifaiApiService) *mux.Router {
 			Handler(route.Handler)
 	}
 
-	// FIXME
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Hello %q", html.EscapeString(r.URL.Path))
 	})
@@ -114,9 +114,38 @@ func makeRouter(ctx context.Context, service ClarifaiApiService) *mux.Router {
 	return router
 }
 
+func makeGojiRouter(ctx context.Context, service ClarifaiApiService) http.Handler {
+	routes := makeRoutes(ctx, service)
+	for _, route := range *routes {
+		// Hm... these are unexported, Goji wants to hide them. Need to iterate all types..
+		//method := goji.web.httpMethod(route.Method)
+		//goji.DefaultMux.handleUntyped(route.Pattern, method, route.Handler)
+		switch {
+		case route.Method == "DELETE":
+			goji.Delete(route.Pattern, route.Handler)
+		case route.Method == "GET":
+			goji.Get(route.Pattern, route.Handler)
+		case route.Method == "POST":
+			goji.Post(route.Pattern, route.Handler)
+		case route.Method == "PUT":
+			goji.Put(route.Pattern, route.Handler)
+		case true:
+			panic(fmt.Sprintf("error, unknown method", route.Method))
+		}
+	}
+
+	goji.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "Hello %q", html.EscapeString(r.URL.Path))
+	})
+
+	goji.DefaultMux.Compile()
+	return goji.DefaultMux
+}
+
 func main() {
 	var (
-		listen = flag.String("listen", ":8080", "HTTP port")
+		listen     = flag.String("listen", ":8080", "HTTP port")
+		routerType = flag.String("router", "goji", "Router package name (goji, gorilla)")
 	)
 	flag.Parse()
 
@@ -129,7 +158,15 @@ func main() {
 	service = clarifaiApiService{}
 	service = loggingMiddleware(logger)(service)
 
-	router := makeRouter(ctx, service)
+	var router http.Handler
+	switch *routerType {
+	default:
+		panic(fmt.Sprintf("Unknown router type", *routerType))
+	case "gorilla":
+		router = makeGorillaRouter(ctx, service)
+	case "goji":
+		router = makeGojiRouter(ctx, service)
+	}
 
 	_ = logger.Log("msg", "HTTP", "addr", *listen)
 	_ = logger.Log("err", http.ListenAndServe(*listen, router))
