@@ -150,8 +150,12 @@ func main() {
 	flag.Parse()
 
 	var logger log.Logger
-	logger = log.NewLogfmtLogger(os.Stderr)
+	logger = log.NewJSONLogger(os.Stdout)
 	logger = log.NewContext(logger).With("listen", *listen).With("caller", log.DefaultCaller)
+
+	// Redirect stdlib log to gokit's logger.
+	// import (stdlog "log")
+	//stdlog.SetOutput(log.NewStdlibAdapter(logger))
 
 	ctx := context.Background()
 	var service ClarifaiApiService

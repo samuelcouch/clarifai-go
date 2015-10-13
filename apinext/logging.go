@@ -18,7 +18,7 @@ type logmw struct {
 }
 
 func (mw logmw) PostImage(req PostImageRequest) (resp PostImageResponse, err error) {
-	// TODO(madadam): Replace with json-structured log.  Send to datadog events from here,
+	// TODO(madadam): Send to datadog events from here,
 	// or write to a file and have something ship logs from the file?
 	defer func(begin time.Time) {
 		_ = mw.logger.Log(
