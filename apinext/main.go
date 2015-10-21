@@ -14,6 +14,7 @@ import (
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
 	httptransport "github.com/go-kit/kit/transport/http"
+	"github.com/go-zoo/bone"
 	"github.com/gorilla/mux"
 	"github.com/zenazn/goji"
 )
@@ -142,10 +143,37 @@ func makeGojiRouter(ctx context.Context, service ClarifaiApiService) http.Handle
 	return goji.DefaultMux
 }
 
+func makeBoneRouter(ctx context.Context, service ClarifaiApiService) http.Handler {
+	mux := bone.New()
+	routes := makeRoutes(ctx, service)
+	for _, route := range *routes {
+		// TODO(madadam): Boo, again, hit an unexported method (register).
+		//mux.register(route.Method, route.Pattern, route.Handler)
+		switch {
+		case route.Method == "DELETE":
+			mux.Delete(route.Pattern, route.Handler)
+		case route.Method == "GET":
+			mux.Get(route.Pattern, route.Handler)
+		case route.Method == "POST":
+			mux.Post(route.Pattern, route.Handler)
+		case route.Method == "PUT":
+			mux.Put(route.Pattern, route.Handler)
+		case true:
+			panic(fmt.Sprintf("error, unknown method", route.Method))
+		}
+	}
+
+	mux.Get("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "Hello %q", html.EscapeString(r.URL.Path))
+	}))
+
+	return mux
+}
+
 func main() {
 	var (
 		listen     = flag.String("listen", ":8080", "HTTP port")
-		routerType = flag.String("router", "goji", "Router package name (goji, gorilla)")
+		routerType = flag.String("router", "bone", "Router package name (bone, goji, gorilla)")
 	)
 	flag.Parse()
 
@@ -170,6 +198,8 @@ func main() {
 		router = makeGorillaRouter(ctx, service)
 	case "goji":
 		router = makeGojiRouter(ctx, service)
+	case "bone":
+		router = makeBoneRouter(ctx, service)
 	}
 
 	_ = logger.Log("msg", "HTTP", "addr", *listen)
