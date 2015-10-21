@@ -25,8 +25,9 @@ Quick summary of what you need to know:
 
 * Add this to your .bash\_profile: `export GO15VENDOREXPERIMENT=1`
 * We’re using [Glide](https://github.com/Masterminds/glide) to handle importing and updating
-vendored packages.  When adding a new dependency, instead of `go get <package>`, do
-`glide get <package>`
+vendored packages.
+  * Install on MacOS with `brew install glide`.
+  * When adding a new dependency, instead of `go get <package>`, do `glide get <package>`
 * After checking out or pulling new code from a Clarifai repo, before building you need to install
 the dependencies with:
 `glide install`
