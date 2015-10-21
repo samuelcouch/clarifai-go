@@ -131,7 +131,7 @@ func makeGojiRouter(ctx context.Context, service ClarifaiApiService) http.Handle
 		case route.Method == "PUT":
 			goji.Put(route.Pattern, route.Handler)
 		case true:
-			panic(fmt.Sprintf("error, unknown method", route.Method))
+			panic(fmt.Sprintf("error, unknown method: %v", route.Method))
 		}
 	}
 
@@ -159,7 +159,7 @@ func makeBoneRouter(ctx context.Context, service ClarifaiApiService) http.Handle
 		case route.Method == "PUT":
 			mux.Put(route.Pattern, route.Handler)
 		case true:
-			panic(fmt.Sprintf("error, unknown method", route.Method))
+			panic(fmt.Sprintf("error, unknown method: %v", route.Method))
 		}
 	}
 
@@ -193,7 +193,7 @@ func main() {
 	var router http.Handler
 	switch *routerType {
 	default:
-		panic(fmt.Sprintf("Unknown router type", *routerType))
+		panic(fmt.Sprintf("Unknown router type: %v", *routerType))
 	case "gorilla":
 		router = makeGorillaRouter(ctx, service)
 	case "goji":
