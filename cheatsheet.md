@@ -55,6 +55,11 @@ A set:
 And other stuff.
 
 
+### Defer
+
+Example using defer with sleep: https://play.golang.org/p/7uOuUaFDhm
+
+
 ## Tools
 
 ### Testing
