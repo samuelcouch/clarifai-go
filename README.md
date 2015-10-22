@@ -1,4 +1,4 @@
-# Clarifai-Go
+# clarifai/go
 
 Clarifai's monolithic (for now) repository of services and packages written in Go.
 
@@ -15,6 +15,17 @@ Clarifai's monolithic (for now) repository of services and packages written in G
 
 __Make sure that $GOROOT is not set in your environment__. Some installers will set it to the wrong
 location.  It shouldn't be needed for our setup.
+
+## Checking out the clarifai/go repo
+
+Ideally we could just run `go get github.com/clarifai/go` like you would with any package.
+Unfortunately, the go tool doesn't natively support fetching from private repos with ssh.  There
+is a workaround described [here](https://gist.github.com/shurcooL/6927554) but it currently
+(2015.10.22) has some issues with updating later, so the best approach for now is to just manually
+clone:
+
+    mkdir -p $GOPATH/src/github.com/clarifai; cd $GOPATH/src/github.com/clarifai
+    git clone git@github.com:clarifai/go.git
 
 
 ## Vendoring
