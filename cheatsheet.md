@@ -27,9 +27,10 @@ Further reading:
 https://play.golang.org/p/AzYrp3HcDR
 
 ### Package initialization
+
 [Package initialization](https://golang.org/ref/spec#Package_initialization)
-```func init() {...}
-```
+
+    func init() {...}
 
 
 ### Empty structs
