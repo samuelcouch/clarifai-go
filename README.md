@@ -13,6 +13,9 @@ Clarifai's monolithic (for now) repository of services and packages written in G
         export PATH=$PATH:$GOPATH/bin
         export GO15VENDOREXPERIMENT=1  # See below about vendoring.
 
+__Make sure that $GOROOT is not set in your environment__. Some installers will set it to the wrong
+location.  It shouldn't be needed for our setup.
+
 
 ## Vendoring
 
