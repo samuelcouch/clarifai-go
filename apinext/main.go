@@ -19,56 +19,59 @@ import (
 	"github.com/zenazn/goji"
 )
 
-type ClarifaiApiService interface {
+// ClarifaiAPIService is the main entry point to the Clarifai API.
+type ClarifaiAPIService interface {
 	PostImage(PostImageRequest) (PostImageResponse, error)
 }
 
-type clarifaiApiService struct{}
+type clarifaiAPIService struct{}
 
-func (clarifaiApiService) PostImage(request PostImageRequest) (PostImageResponse, error) {
+func (clarifaiAPIService) PostImage(request PostImageRequest) (PostImageResponse, error) {
 	// FIXME: schema validation. swagger?  or manually?
 	if false {
 		// FIXME testing errors
 		return PostImageResponse{"", "", "", "bad stuff happened"},
-			&ApiError{500, "boom, error occurred.", "you broke it!"}
+			&APIError{500, "boom, error occurred.", "you broke it!"}
 	}
 	var response = PostImageResponse{
 		"Ed1nuqPvcm",
 		"2011-08-20T02:06:57.931Z",
-		request.Uri,
+		request.URI,
 		"",
 	}
 	return response, nil
 }
 
-// Chainable middleware type.
-type ServiceMiddleware func(ClarifaiApiService) ClarifaiApiService
+// ServiceMiddleware is a chainable middleware type.
+type ServiceMiddleware func(ClarifaiAPIService) ClarifaiAPIService
 
-type ApiError struct {
-	HttpStatus int
+// APIError is the package-wide error representation.
+type APIError struct {
+	HTTPStatus int
 	UserMsg    string
 	LogMsg     string
 }
 
-func (err *ApiError) Error() string {
-	return fmt.Sprintf("%d %s [%s]", err.HttpStatus, err.UserMsg, err.LogMsg)
+func (err *APIError) Error() string {
+	return fmt.Sprintf("%d %s [%s]", err.HTTPStatus, err.UserMsg, err.LogMsg)
 }
 
 // API schema object types.
 
+// PostImageRequest is the structure through which requests are issued.
 type PostImageRequest struct {
-	Uri string `json:"uri"`
+	URI string `json:"uri"`
 }
 
+// PostImageResponse is the response to a PostImageRequest.
 type PostImageResponse struct {
-	ObjectId  string `json:"objectId"`
+	ObjectID  string `json:"objectId"`
 	CreatedAt string `json:"createdAt"`
-	Uri       string `json:"uri"`
+	URI       string `json:"uri"`
 	Err       string `json:"err,omitempty"` // errors don't define JSON marshaling
 }
 
-// Routes.
-
+// Route defines how to map HTTP endpoints to handlers.
 type Route struct {
 	Name    string
 	Method  string
@@ -76,9 +79,10 @@ type Route struct {
 	Handler http.Handler
 }
 
+// Routes is a collection of Route objects.
 type Routes []Route
 
-func makeRoutes(ctx context.Context, service ClarifaiApiService) *Routes {
+func makeRoutes(ctx context.Context, service ClarifaiAPIService) *Routes {
 	postImageHandler := httptransport.NewServer(
 		ctx,
 		makePostImageEndpoint(service),
@@ -97,7 +101,7 @@ func makeRoutes(ctx context.Context, service ClarifaiApiService) *Routes {
 	return &routes
 }
 
-func makeGorillaRouter(ctx context.Context, service ClarifaiApiService) http.Handler {
+func makeGorillaRouter(ctx context.Context, service ClarifaiAPIService) http.Handler {
 	router := mux.NewRouter().StrictSlash(true)
 	routes := makeRoutes(ctx, service)
 	for _, route := range *routes {
@@ -115,7 +119,7 @@ func makeGorillaRouter(ctx context.Context, service ClarifaiApiService) http.Han
 	return router
 }
 
-func makeGojiRouter(ctx context.Context, service ClarifaiApiService) http.Handler {
+func makeGojiRouter(ctx context.Context, service ClarifaiAPIService) http.Handler {
 	routes := makeRoutes(ctx, service)
 	for _, route := range *routes {
 		// Hm... these are unexported, Goji wants to hide them. Need to iterate all types..
@@ -143,7 +147,7 @@ func makeGojiRouter(ctx context.Context, service ClarifaiApiService) http.Handle
 	return goji.DefaultMux
 }
 
-func makeBoneRouter(ctx context.Context, service ClarifaiApiService) http.Handler {
+func makeBoneRouter(ctx context.Context, service ClarifaiAPIService) http.Handler {
 	mux := bone.New()
 	routes := makeRoutes(ctx, service)
 	for _, route := range *routes {
@@ -186,8 +190,8 @@ func main() {
 	//stdlog.SetOutput(log.NewStdlibAdapter(logger))
 
 	ctx := context.Background()
-	var service ClarifaiApiService
-	service = clarifaiApiService{}
+	var service ClarifaiAPIService
+	service = clarifaiAPIService{}
 	service = loggingMiddleware(logger)(service)
 
 	var router http.Handler
@@ -206,14 +210,14 @@ func main() {
 	_ = logger.Log("err", http.ListenAndServe(*listen, router))
 }
 
-func makePostImageEndpoint(svc ClarifaiApiService) endpoint.Endpoint {
+func makePostImageEndpoint(svc ClarifaiAPIService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(PostImageRequest)
 		response, err := svc.PostImage(req)
 		if err != nil {
 			// FIXME error handling
 			return PostImageResponse{"", "", "", err.Error()},
-				&ApiError{500, "Sorry, an error occurred.", err.Error()}
+				&APIError{500, "Sorry, an error occurred.", err.Error()}
 		}
 		return response, err
 	}
