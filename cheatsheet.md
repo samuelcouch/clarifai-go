@@ -60,6 +60,16 @@ And other stuff.
 Example using defer with sleep: https://play.golang.org/p/7uOuUaFDhm
 
 
+### Pass by value vs. pass by reference
+
+If you're not used to languages that distinguish pointers/references from values,
+this can trip you up.
+
+See [this example](https://play.golang.org/p/vkvkj-Dpyd) of a bug where an object
+is passed by value instead of reference, inadvertantly making a copy which breaks
+the logic.
+
+
 ## Tools
 
 ### Testing
