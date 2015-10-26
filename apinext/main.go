@@ -136,7 +136,7 @@ func makeGojiRouter(ctx context.Context, service ClarifaiApiService) http.Handle
 	}
 
 	goji.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Hello %q", html.EscapeString(r.URL.Path))
+		fmt.Fprintf(w, "Hello goodbye %q", html.EscapeString(r.URL.Path))
 	})
 
 	goji.DefaultMux.Compile()
@@ -162,6 +162,12 @@ func makeBoneRouter(ctx context.Context, service ClarifaiApiService) http.Handle
 			panic(fmt.Sprintf("error, unknown method: %v", route.Method))
 		}
 	}
+
+	proxy, err := NewProxy("https://api.clarifai.com")
+	if err != nil {
+		panic("Couldn't create proxy handler.")
+	}
+	mux.Handle("/v1/*", proxy)
 
 	mux.Get("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Hello %q", html.EscapeString(r.URL.Path))
