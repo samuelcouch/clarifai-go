@@ -21,8 +21,8 @@ func TestRootHandler(t *testing.T) {
 	recorder := httptest.NewRecorder()
 
 	ctx := context.Background()
-	var service ClarifaiApiService
-	service = clarifaiApiService{}
+	var service ClarifaiAPIService
+	service = clarifaiAPIService{}
 	//router := makeGorillaRouter(ctx, service)
 	router := makeGojiRouter(ctx, service)
 
@@ -33,17 +33,17 @@ func TestRootHandler(t *testing.T) {
 }
 
 func TestPostImage(t *testing.T) {
-	expectedUri := "http://foo.com/bar"
+	expectedURI := "http://foo.com/bar"
 	data := map[string]interface{}{
-		"uri": expectedUri,
+		"uri": expectedURI,
 	}
 	s, _ := json.Marshal(data)
 	req, _ := http.NewRequest("POST", "/images", bytes.NewBuffer(s))
 	recorder := httptest.NewRecorder()
 
 	ctx := context.Background()
-	var service ClarifaiApiService
-	service = clarifaiApiService{}
+	var service ClarifaiAPIService
+	service = clarifaiAPIService{}
 	//router := makeGorillaRouter(ctx, service)
 	router := makeGojiRouter(ctx, service)
 
@@ -56,7 +56,7 @@ func TestPostImage(t *testing.T) {
 	var responseData map[string]interface{}
 	responseBytes, _ := ioutil.ReadAll(recorder.Body)
 	_ = json.Unmarshal([]byte(responseBytes), &responseData)
-	if responseData["uri"] != expectedUri {
-		t.Errorf("Didn't get expected response['uri'] %v != %v", responseData["uri"], expectedUri)
+	if responseData["uri"] != expectedURI {
+		t.Errorf("Didn't get expected response['uri'] %v != %v", responseData["uri"], expectedURI)
 	}
 }
