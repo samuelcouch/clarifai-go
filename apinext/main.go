@@ -90,12 +90,29 @@ func makeRoutes(ctx context.Context, service ClarifaiAPIService) *Routes {
 		encodeResponse,
 	)
 
+	proxy, err := NewProxy("https://api.clarifai.com")
+	if err != nil {
+		panic("Couldn't create proxy handler.")
+	}
+	proxyHandler := httptransport.NewServer(
+		ctx,
+		NewProxyEndpoint(proxy),
+		decodeProxyRequest,
+		encodeRecordedResponse,
+	)
+
 	var routes = Routes{
 		Route{
 			"Images",
 			"POST",
 			"/images",
 			postImageHandler,
+		},
+		Route{
+			"Proxy",
+			"*",
+			"/v1/*",
+			proxyHandler,
 		},
 	}
 	return &routes
@@ -162,16 +179,12 @@ func makeBoneRouter(ctx context.Context, service ClarifaiAPIService) http.Handle
 			mux.Post(route.Pattern, route.Handler)
 		case route.Method == "PUT":
 			mux.Put(route.Pattern, route.Handler)
+		case route.Method == "*":
+			mux.Handle(route.Pattern, route.Handler)
 		case true:
 			panic(fmt.Sprintf("error, unknown method: %v", route.Method))
 		}
 	}
-
-	proxy, err := NewProxy("https://api.clarifai.com")
-	if err != nil {
-		panic("Couldn't create proxy handler.")
-	}
-	mux.Handle("/v1/*", proxy)
 
 	mux.Get("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Hello %q", html.EscapeString(r.URL.Path))

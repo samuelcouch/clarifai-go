@@ -24,7 +24,8 @@ func TestRootHandler(t *testing.T) {
 	var service ClarifaiAPIService
 	service = clarifaiAPIService{}
 	//router := makeGorillaRouter(ctx, service)
-	router := makeGojiRouter(ctx, service)
+	//router := makeGojiRouter(ctx, service)
+	router := makeBoneRouter(ctx, service)
 
 	router.ServeHTTP(recorder, req)
 	if recorder.Code != http.StatusOK {
@@ -45,7 +46,8 @@ func TestPostImage(t *testing.T) {
 	var service ClarifaiAPIService
 	service = clarifaiAPIService{}
 	//router := makeGorillaRouter(ctx, service)
-	router := makeGojiRouter(ctx, service)
+	//router := makeGojiRouter(ctx, service)
+	router := makeBoneRouter(ctx, service)
 
 	router.ServeHTTP(recorder, req)
 
