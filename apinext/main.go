@@ -199,7 +199,7 @@ func makeBoneRouter(ctx context.Context, service ClarifaiAPIService) http.Handle
 func main() {
 	var (
 		listen     = flag.String("listen", ":8080", "HTTP port")
-		routerType = flag.String("router", "bone", "Router package name (bone, goji, gorilla)")
+		routerType = flag.String("router", "goji", "Router package name (bone, goji, gorilla)")
 	)
 	flag.Parse()
 
