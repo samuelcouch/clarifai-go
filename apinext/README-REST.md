@@ -95,6 +95,9 @@ Other proxy-related issues:
     * -> In translation mode, we can authenticate tokens to the new user/auth service once it’s available, and meanwhile forward them until that’s ready.
 * When proxying, copy all other http headers, accept-encoding, X-Forwarded-For, Host.  To preserve nginx rate limiting and server_name, django allowed hosts, etc.
 * Avoid double logging and throttle/usage counting?  Once we start logging in the v2 binary, we could set should_log_requests=false.  However, it might make sense to double-log because the v2 log format will be different, and having both copies may help ensure we’re logging the right stuff and the translation layer is working right.
+* Lame-ducking: long-running requests sent to v1 may not complete within the v2 service's
+  lame-duck window.  We can either make the window long enough to avoid this, or just fail those
+  requests until the vision/predict service is refactored around an async work queue.
 
 ## API discovery and self-documenting APIs
 
