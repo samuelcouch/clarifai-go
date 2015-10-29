@@ -122,6 +122,7 @@ func makeGorillaRouter(ctx context.Context, service ClarifaiAPIService) http.Han
 	router := mux.NewRouter().StrictSlash(true)
 	routes := makeRoutes(ctx, service)
 	for _, route := range *routes {
+		// TODO(madadam): Make this work w/ wildcard method and prefix route.
 		router.
 			Methods(route.Method).
 			Path(route.Pattern).
@@ -151,6 +152,8 @@ func makeGojiRouter(ctx context.Context, service ClarifaiAPIService) http.Handle
 			goji.Post(route.Pattern, route.Handler)
 		case route.Method == "PUT":
 			goji.Put(route.Pattern, route.Handler)
+		case route.Method == "*":
+			goji.Handle(route.Pattern, route.Handler)
 		case true:
 			panic(fmt.Sprintf("error, unknown method: %v", route.Method))
 		}
