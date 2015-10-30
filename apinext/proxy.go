@@ -9,41 +9,8 @@ import (
 	"net/url"
 
 	"github.com/go-kit/kit/endpoint"
-	//httptransport "github.com/go-kit/kit/transport/http"
 	"golang.org/x/net/context"
 )
-
-/*
-type proxymw struct {
-	context.Context
-	ClarifaiAPIService // Serve most stuff with this embedded service.
-	ProxyEndpoint      endpoint.Endpoint
-}
-
-func proxyMiddleware(proxyURL string, ctx context.Context) ServiceMiddleware {
-	return func(next ClarifaiAPIService) ClarifaiAPIService {
-		return proxymw{ctx, next, makeProxyEndpoint(ctx, proxyURL)}
-	}
-}
-
-func makeProxyEndpoint(ctx context.Context, proxyURL string) endpoint.Endpoint {
-	u, err := url.Parse(proxyURL)
-	if err != nil {
-		panic(err)
-	}
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		return httptransport.NewClient(
-			"GET",
-			u,
-			encodeRequestToAPIv1,
-			decodeAPIv1Response,
-		).Endpoint()
-	}
-}
-
-// FIXME: can this be generic, or do we need per-endpoint codec?
-func encodeRequestToAPIV1() {} // FIXME
-*/
 
 // Returns an http.Handler that proxies to the specified uri.
 func NewProxy(uri string) (http.Handler, error) {
