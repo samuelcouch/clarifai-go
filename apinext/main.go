@@ -8,9 +8,11 @@ import (
 	"html"
 	"net/http"
 	"os"
+	"strings"
 
 	"golang.org/x/net/context"
 
+	"github.com/PuerkitoBio/goquery"
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
 	httptransport "github.com/go-kit/kit/transport/http"
@@ -21,6 +23,7 @@ import (
 
 // ClarifaiAPIService is the main entry point to the Clarifai API.
 type ClarifaiAPIService interface {
+	GetModels(GetModelsRequest) (GetModelsResponse, error)
 	PostImage(PostImageRequest) (PostImageResponse, error)
 }
 
@@ -40,6 +43,68 @@ func (clarifaiAPIService) PostImage(request PostImageRequest) (PostImageResponse
 		"",
 	}
 	return response, nil
+}
+
+type Model struct {
+	Name         string   `json:"model"`
+	SupportedOps []string `json:"supported_ops"`
+}
+
+type GetModelsRequest struct{} // Needed if there's no playload?
+
+type GetModelsResponse struct {
+	Models []Model `json:"models"`
+	Err    string  `json:"err,omitempty"`
+}
+
+func getModelsFromModelz() (GetModelsResponse, error) {
+	// TODO(madadam): base_url as flag/param.
+	doc, err := goquery.NewDocument("https://api.clarifai.com/v1/modelz")
+	if err != nil {
+		var response = GetModelsResponse{
+			Models: []Model{},
+			Err:    "Error getting model info",
+		}
+		return response, err
+	}
+	jsonish := doc.Find("pre").First().Text()
+	// It's actually a printed python dict with single quotes, so it's not valid json.  Fix:
+	jsonish = strings.Replace(jsonish, "'", "\"", -1)
+	var f interface{}
+	err = json.Unmarshal([]byte(jsonish), &f)
+	if err != nil {
+		var response = GetModelsResponse{
+			Models: []Model{},
+			Err:    "Error getting model info",
+		}
+		return response, err
+	}
+	modelzInfo := f.(map[string]interface{})
+
+	var modelmap = make(map[string][]string)
+	for k, _ := range modelzInfo {
+		parts := strings.Split(k, ":")
+		if _, found := modelmap[parts[0]]; !found {
+			modelmap[parts[0]] = make([]string, 0)
+		}
+		modelmap[parts[0]] = append(modelmap[parts[0]], parts[1])
+	}
+	fmt.Println(modelmap) //FIXME
+
+	models := make([]Model, 0)
+	for name, ops := range modelmap {
+		models = append(models, Model{name, ops})
+	}
+
+	return GetModelsResponse{
+		Models: models,
+		Err:    "",
+	}, nil
+}
+
+func (clarifaiAPIService) GetModels(request GetModelsRequest) (GetModelsResponse, error) {
+	response, err := getModelsFromModelz()
+	return response, err
 }
 
 // ServiceMiddleware is a chainable middleware type.
@@ -90,15 +155,22 @@ func makeRoutes(ctx context.Context, service ClarifaiAPIService) *Routes {
 		encodeResponse,
 	)
 
+	getModelsHandler := httptransport.NewServer(
+		ctx,
+		makeGetModelsEndpoint(service),
+		decodeGetModelsRequest,
+		encodeResponse,
+	)
+
 	proxy, err := NewProxy("https://api.clarifai.com")
 	if err != nil {
 		panic("Couldn't create proxy handler.")
 	}
 	proxyHandler := httptransport.NewServer(
 		ctx,
-		NewProxyEndpoint(proxy),
-		decodeProxyRequest,
-		encodeRecordedResponse,
+		makePassthroughProxyEndpoint(proxy),
+		decodePassthroughProxyRequest,
+		encodeFromRecordedResponse,
 	)
 
 	var routes = Routes{
@@ -107,6 +179,12 @@ func makeRoutes(ctx context.Context, service ClarifaiAPIService) *Routes {
 			"POST",
 			"/images",
 			postImageHandler,
+		},
+		Route{
+			"Models",
+			"GET",
+			"/models",
+			getModelsHandler,
 		},
 		Route{
 			"Proxy",
@@ -232,6 +310,20 @@ func main() {
 	_ = logger.Log("err", http.ListenAndServe(*listen, router))
 }
 
+// Hm, how can we reduce all this boilerplate?
+func makeGetModelsEndpoint(svc ClarifaiAPIService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(GetModelsRequest)
+		response, err := svc.GetModels(req)
+		if err != nil {
+			// FIXME error handling
+			return GetModelsResponse{[]Model{}, err.Error()},
+				&APIError{500, "Sorry, an error occurred.", err.Error()}
+		}
+		return response, err
+	}
+}
+
 func makePostImageEndpoint(svc ClarifaiAPIService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(PostImageRequest)
@@ -250,6 +342,18 @@ func decodePostImageRequest(r *http.Request) (interface{}, error) {
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		return nil, err
 	}
+	return request, nil
+}
+
+// FIXME can this be made generic?
+func decodeGetModelsRequest(r *http.Request) (interface{}, error) {
+	/*
+		// NOTE: The decoder gives an error if asked to decode an empty string. So we can't do:
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+			return nil, err
+		}
+	*/
+	request := GetModelsRequest{}
 	return request, nil
 }
 
