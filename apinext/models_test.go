@@ -2,6 +2,7 @@ package main
 
 import (
 	//"fmt"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -19,13 +20,7 @@ var goodModelzBody string = `
  'general-v1.1:embed': ['4691_sim_no_tree_center1'],
  'general-v1.1:facedet': ['51169_sorta2'],
  'general-v1.1:facedetrec': ['51169_sorta2'],
- 'general-v1.1:tag': ['30065_sorta2'],
- 'general-v1.2:embed': ['51173_sorta2'],
- 'general-v1.2:embed_tag': ['51173_sorta2'],
- 'general-v1.2:tag': ['51173_sorta2'],
- 'general-v1.3:embed': ['80893_sorta2'],
- 'general-v1.3:embed_tag': ['80893_sorta2'],
- 'general-v1.3:tag': ['80893_sorta2']
+ 'general-v1.1:tag': ['30065_sorta2']
  }</pre><h1>Backend Map</h1>Map from each spire_conf name to a list host:port where spires are detected.<pre>{'20348_sorta2': [10.0.2.212:1234],
  '24023_center1': [10.0.4.108:1234],
  '25293_center1': [10.0.0.188:1232],
@@ -39,6 +34,34 @@ var goodModelzBody string = `
  '80893_sorta2': [10.0.4.109:1233, 10.0.4.109:1230, 10.0.5.112:1233]}</pre>
  `
 
+func MakeInterfaceSlice(a []ModelInfo) []interface{} {
+	var s []interface{} = make([]interface{}, len(a))
+	for i, val := range a {
+		s[i] = val
+	}
+	return s
+}
+
+// Order-independent test that elements are DeepEqual.
+func ElementsDeepEqual(a []interface{}, b []interface{}) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for vala := range a {
+		found := false
+		for valb := range b {
+			if reflect.DeepEqual(vala, valb) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+	return true
+}
+
 func TestGoodModelz(t *testing.T) {
 	// Inject response using a function object.  See http://openmymind.net/Dependency-Injection-In-Go/
 	getModelzResponse = func() (*goquery.Document, error) {
@@ -46,8 +69,14 @@ func TestGoodModelz(t *testing.T) {
 	}
 
 	resp, _ := getModelsFromModelz()
-	expectedModels := []string{"celeb-v1.1", "default", "general-v1.1", "general-v1.2", "general-v1.3"}
-	if len(resp.Models) != len(expectedModels) {
-		t.Errorf("Wrong number of models parsed: %d vs %d", len(resp.Models), len(expectedModels))
+	expectedModels := []ModelInfo{
+		ModelInfo{"celeb-v1.1", []string{"facedet", "facedetrec"}},
+		ModelInfo{"default", []string{"embed", "facedet", "facedetrec"}},
+		ModelInfo{"general-v1.1", []string{"embed", "facedet", "facedetrec", "tag"}},
+	}
+	if !ElementsDeepEqual(
+		MakeInterfaceSlice(resp.Models),
+		MakeInterfaceSlice(expectedModels)) {
+		t.Errorf("Unexpected results: %v vs %v", resp.Models, expectedModels)
 	}
 }

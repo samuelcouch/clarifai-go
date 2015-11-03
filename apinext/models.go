@@ -2,14 +2,13 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
 )
 
 type ModelInfo struct {
-	Name         string   `json:"model"`
+	Name         string   `json:"name"`
 	SupportedOps []string `json:"supported_ops"`
 }
 
@@ -40,31 +39,27 @@ var getModelzResponse = func() (*goquery.Document, error) {
 }
 
 func getModelsFromModelz() (GetModelsResponse, error) {
+	var response = GetModelsResponse{
+		Models: []ModelInfo{},
+		Err:    "",
+	}
 	doc, err := getModelzResponse()
 	if err != nil {
-		fmt.Println("error", err)
-		var response = GetModelsResponse{
-			Models: []ModelInfo{},
-			Err:    "Error getting model info",
-		}
+		response.Err = "Error getting model info"
 		return response, err
 	}
 	jsonish := doc.Find("pre").First().Text()
 	// It's actually a printed python dict with single quotes, so it's not valid json.  Fix:
 	jsonish = strings.Replace(jsonish, "'", "\"", -1)
-	var f interface{}
-	err = json.Unmarshal([]byte(jsonish), &f)
+	var modelzInfo map[string]interface{}
+	err = json.Unmarshal([]byte(jsonish), &modelzInfo)
 	if err != nil {
-		var response = GetModelsResponse{
-			Models: []ModelInfo{},
-			Err:    "Error getting model info",
-		}
+		response.Err = "Error getting model info"
 		return response, err
 	}
-	modelzInfo := f.(map[string]interface{})
 
 	var modelmap = make(map[string][]string)
-	for k, _ := range modelzInfo {
+	for k := range modelzInfo {
 		parts := strings.Split(k, ":")
 		if _, found := modelmap[parts[0]]; !found {
 			modelmap[parts[0]] = make([]string, 0)
@@ -78,8 +73,6 @@ func getModelsFromModelz() (GetModelsResponse, error) {
 		models = append(models, ModelInfo{name, ops})
 	}
 
-	return GetModelsResponse{
-		Models: models,
-		Err:    "",
-	}, nil
+	response.Models = models
+	return response, nil
 }
