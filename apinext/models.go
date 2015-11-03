@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
@@ -32,10 +33,16 @@ func removeDuplicates(s []string) []string {
 	return result
 }
 
-func getModelsFromModelz() (GetModelsResponse, error) {
+var getModelzResponse = func() (*goquery.Document, error) {
+	// Note how we use a function object for dependency injection, see models_test.go.
 	// TODO(madadam): base_url as flag/param.
-	doc, err := goquery.NewDocument("https://api.clarifai.com/v1/modelz")
+	return goquery.NewDocument("https://api.clarifai.com/v1/modelz")
+}
+
+func getModelsFromModelz() (GetModelsResponse, error) {
+	doc, err := getModelzResponse()
 	if err != nil {
+		fmt.Println("error", err)
 		var response = GetModelsResponse{
 			Models: []Model{},
 			Err:    "Error getting model info",
