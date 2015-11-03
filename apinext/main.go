@@ -258,7 +258,7 @@ func makeGetModelsEndpoint(svc ClarifaiAPIService) endpoint.Endpoint {
 		response, err := svc.GetModels(req)
 		if err != nil {
 			// FIXME error handling
-			return GetModelsResponse{[]Model{}, err.Error()},
+			return GetModelsResponse{[]ModelInfo{}, err.Error()},
 				&APIError{500, "Sorry, an error occurred.", err.Error()}
 		}
 		return response, err

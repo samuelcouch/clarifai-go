@@ -8,7 +8,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 )
 
-type Model struct {
+type ModelInfo struct {
 	Name         string   `json:"model"`
 	SupportedOps []string `json:"supported_ops"`
 }
@@ -16,13 +16,13 @@ type Model struct {
 type GetModelsRequest struct{} // Needed if there's no playload?
 
 type GetModelsResponse struct {
-	Models []Model `json:"models"`
-	Err    string  `json:"err,omitempty"`
+	Models []ModelInfo `json:"models"`
+	Err    string      `json:"err,omitempty"`
 }
 
 // Aaagh, lack of generics hurts.
 func removeDuplicates(s []string) []string {
-	result := []string{}
+	var result []string
 	seen := map[string]struct{}{}
 	for _, v := range s {
 		if _, found := seen[v]; !found {
@@ -44,7 +44,7 @@ func getModelsFromModelz() (GetModelsResponse, error) {
 	if err != nil {
 		fmt.Println("error", err)
 		var response = GetModelsResponse{
-			Models: []Model{},
+			Models: []ModelInfo{},
 			Err:    "Error getting model info",
 		}
 		return response, err
@@ -56,7 +56,7 @@ func getModelsFromModelz() (GetModelsResponse, error) {
 	err = json.Unmarshal([]byte(jsonish), &f)
 	if err != nil {
 		var response = GetModelsResponse{
-			Models: []Model{},
+			Models: []ModelInfo{},
 			Err:    "Error getting model info",
 		}
 		return response, err
@@ -72,10 +72,10 @@ func getModelsFromModelz() (GetModelsResponse, error) {
 		modelmap[parts[0]] = append(modelmap[parts[0]], parts[1])
 	}
 
-	models := make([]Model, 0)
+	models := make([]ModelInfo, 0)
 	for name, ops := range modelmap {
 		ops = removeDuplicates(ops)
-		models = append(models, Model{name, ops})
+		models = append(models, ModelInfo{name, ops})
 	}
 
 	return GetModelsResponse{
