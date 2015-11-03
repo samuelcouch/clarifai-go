@@ -75,17 +75,55 @@ Swagger support?
 Until APIv1 is shut down (which may be a long time…) we need a strategy for serving v1 traffic alongside v2.  Furthermore, during the migration/development period, some v2 functionality will be implemented by putting a translation layer in front of existing v1 endpoints and new endpoints in the v1 binary.
 
 Options for serving v1 traffic include:
+
 1. Point all v1 traffic to a new v2 binary that performs transparent passthrough routing to the v1 servers.  Use DNS for discovery (initially api.clarifai.com, moving to api-1.clarifai.com when the new binary is ready to assume api.clarifai.com traffic).
     1. pro: Can wrap the proxied requests in new middleware, e.g. logging.
     1. pro: Can do forking/mirroring
     1. pro: Doesn’t change the existing v1 deployment/serving story.
     1. con: ?  Extra traffic through the new binary, with some undesirable legacy characteristics (long synchronous requests).
 
+![Alt text](http://g.gravizo.com/g?
+@startuml;
+interface "v1 traffic" as v1in;
+interface "v2 traffic" as v2in;
+cloud ELB;
+node "API-Next\\nREST" as APIv2;
+node APIv1 %23lightblue;
+node "Other services" as Other;
+v1in --> ELB;
+v2in --> ELB;
+ELB --> APIv2;
+APIv2 --> APIv1 : v1 passthrough;
+APIv2 --> APIv1 : v2 translated;
+APIv2 --> Other : v2 new backends;
+@enduml;
+)
+
+
 1. Put both v1 and v2 servers behind a new proxy (nginx or haproxy) that routes v1/v2 to their respective servers.
     1. con: Introduces a new proxy component that needs to be managed and configured.
     1. con: Introduces new service discovery requirements for the proxy to discover the REST backends; needs to support blue/green traffic ramping.
     1. pro: extensible, could add more REST servers for new endpoints over time.
     1. pro: haproxy and nginx are battle-tested and well supported.
+
+![Alt text](http://g.gravizo.com/g?
+@startuml;
+interface "v1 traffic" as v1in;
+interface "v2 traffic" as v2in;
+cloud ELB;
+node Proxy;
+node "API-Next\\nREST" as APIv2;
+node APIv1 %23lightblue;
+node "Other services" as Other;
+v1in --> ELB;
+v2in --> ELB;
+ELB --> Proxy;
+Proxy --> APIv2;
+Proxy --> APIv1 : v1 traffic;
+APIv2 --> APIv1 : v2 translated;
+APIv2 --> Other : v2 new backends;
+@enduml;
+)
 
 __2015.10.29__:  Let’s try (1) first and see how it feels.
 
