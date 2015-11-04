@@ -12,8 +12,6 @@ import (
 	"golang.org/x/net/context"
 )
 
-// TODO(madadam): Make this into an Endpoint/service that we can wrap with middleware.
-
 // Returns an http.Handler that proxies to the specified uri.
 func NewProxy(uri string) (http.Handler, error) {
 	u, err := url.Parse(uri)
@@ -34,7 +32,12 @@ func NewProxy(uri string) (http.Handler, error) {
 //
 // The goal is to wrap the proxy handler in an endpoint, so we can use
 // standard middleware for logging, alerting, throttling, etc.
-func NewProxyEndpoint(proxyHandler http.Handler) endpoint.Endpoint {
+//
+// This differs from httptransport.NewClient, which does a similar thing, but expects
+// the proxied-to service to have a response schema.  This version passes through
+// requests and responses without trying to parse them into a schema, it just plays back
+// the bytes using an httptest.ResponseRecorder.
+func makePassthroughProxyEndpoint(proxyHandler http.Handler) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		r := request.(*http.Request)
 
@@ -49,12 +52,12 @@ func NewProxyEndpoint(proxyHandler http.Handler) endpoint.Endpoint {
 }
 
 // No-op:  a proxy request is just the original http.Request.
-func decodeProxyRequest(r *http.Request) (interface{}, error) {
+func decodePassthroughProxyRequest(r *http.Request) (interface{}, error) {
 	return r, nil
 }
 
 // Pipe the recorded response from a ResponseRecorder to a new ResponseWriter.
-func encodeRecordedResponse(w http.ResponseWriter, response interface{}) error {
+func encodeFromRecordedResponse(w http.ResponseWriter, response interface{}) error {
 	rec := response.(*httptest.ResponseRecorder) // FIXME pointer?
 	for k, v := range rec.Header() {
 		w.Header()[k] = v

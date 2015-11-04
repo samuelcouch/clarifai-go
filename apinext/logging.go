@@ -33,3 +33,17 @@ func (mw logmw) PostImage(req PostImageRequest) (resp PostImageResponse, err err
 	resp, err = mw.ClarifaiAPIService.PostImage(req)
 	return
 }
+
+func (mw logmw) GetModels(req GetModelsRequest) (resp GetModelsResponse, err error) {
+	defer func(begin time.Time) {
+		_ = mw.logger.Log(
+			"method", "GetModels",
+			"models", resp.Models,
+			"err", err,
+			"took", time.Since(begin),
+		)
+	}(time.Now())
+
+	resp, err = mw.ClarifaiAPIService.GetModels(req)
+	return
+}

@@ -1,10 +1,16 @@
 package: main
 import:
+  - package: golang.org/x/net
+    subpackages:
+      - /content
+  - package: github.com/PuerkitoBio/goquery
+  - package: gopkg.in/logfmt.v0
+  - package: gopkg.in/stack.v1
+  - package: github.com/go-zoo/bone
   - package: github.com/gorilla/mux
     repo:    https://github.com/gorilla/mux
     vcs:     git
   - package: github.com/zenazn/goji
-  - package: github.com/gorilla/context
   - package: github.com/go-kit/kit
     repo:    https://github.com/go-kit/kit
     vcs:     git
@@ -12,9 +18,5 @@ import:
       - /endpoint
       - /log
       - /transport/http
-  - package: golang.org/x/net
-    subpackages:
-      - /content
-  - package: gopkg.in/logfmt.v0
-  - package: gopkg.in/stack.v1
-  - package: github.com/go-zoo/bone
+  - package: github.com/gorilla/context
+  - package: github.com/andybalholm/cascadia

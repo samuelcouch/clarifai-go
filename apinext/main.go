@@ -21,6 +21,7 @@ import (
 
 // ClarifaiAPIService is the main entry point to the Clarifai API.
 type ClarifaiAPIService interface {
+	GetModels(GetModelsRequest) (GetModelsResponse, error)
 	PostImage(PostImageRequest) (PostImageResponse, error)
 }
 
@@ -40,6 +41,11 @@ func (clarifaiAPIService) PostImage(request PostImageRequest) (PostImageResponse
 		"",
 	}
 	return response, nil
+}
+
+func (clarifaiAPIService) GetModels(request GetModelsRequest) (GetModelsResponse, error) {
+	response, err := getModelsFromModelz()
+	return response, err
 }
 
 // ServiceMiddleware is a chainable middleware type.
@@ -90,15 +96,22 @@ func makeRoutes(ctx context.Context, service ClarifaiAPIService) *Routes {
 		encodeResponse,
 	)
 
+	getModelsHandler := httptransport.NewServer(
+		ctx,
+		makeGetModelsEndpoint(service),
+		decodeGetModelsRequest,
+		encodeResponse,
+	)
+
 	proxy, err := NewProxy("https://api.clarifai.com")
 	if err != nil {
 		panic("Couldn't create proxy handler.")
 	}
 	proxyHandler := httptransport.NewServer(
 		ctx,
-		NewProxyEndpoint(proxy),
-		decodeProxyRequest,
-		encodeRecordedResponse,
+		makePassthroughProxyEndpoint(proxy),
+		decodePassthroughProxyRequest,
+		encodeFromRecordedResponse,
 	)
 
 	var routes = Routes{
@@ -107,6 +120,12 @@ func makeRoutes(ctx context.Context, service ClarifaiAPIService) *Routes {
 			"POST",
 			"/images",
 			postImageHandler,
+		},
+		Route{
+			"Models",
+			"GET",
+			"/models",
+			getModelsHandler,
 		},
 		Route{
 			"Proxy",
@@ -232,6 +251,20 @@ func main() {
 	_ = logger.Log("err", http.ListenAndServe(*listen, router))
 }
 
+// Hm, how can we reduce all this boilerplate?
+func makeGetModelsEndpoint(svc ClarifaiAPIService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(GetModelsRequest)
+		response, err := svc.GetModels(req)
+		if err != nil {
+			// FIXME error handling
+			return GetModelsResponse{[]ModelInfo{}, err.Error()},
+				&APIError{500, "Sorry, an error occurred.", err.Error()}
+		}
+		return response, err
+	}
+}
+
 func makePostImageEndpoint(svc ClarifaiAPIService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(PostImageRequest)
@@ -245,11 +278,24 @@ func makePostImageEndpoint(svc ClarifaiAPIService) endpoint.Endpoint {
 	}
 }
 
+// TODO(madadam): can this decoders be made generic?
+
 func decodePostImageRequest(r *http.Request) (interface{}, error) {
 	var request PostImageRequest
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		return nil, err
 	}
+	return request, nil
+}
+
+func decodeGetModelsRequest(r *http.Request) (interface{}, error) {
+	/*
+		// NOTE: The decoder gives an error if asked to decode an empty string. So we can't do:
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+			return nil, err
+		}
+	*/
+	request := GetModelsRequest{}
 	return request, nil
 }
 
