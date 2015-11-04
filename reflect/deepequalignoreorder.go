@@ -17,12 +17,12 @@ type visit struct {
 }
 
 func deepListValueEqualIgnoreOrder(v1, v2 stdreflect.Value, visited map[visit]bool, depth int) bool {
+	if v1.Len() != v2.Len() {
+		return false
+	}
 	matched := make(map[int]bool)
 	if v1.Kind() == stdreflect.Slice {
 		if v1.IsNil() != v2.IsNil() {
-			return false
-		}
-		if v1.Len() != v2.Len() {
 			return false
 		}
 		if v1.Pointer() == v2.Pointer() {
@@ -38,6 +38,7 @@ func deepListValueEqualIgnoreOrder(v1, v2 stdreflect.Value, visited map[visit]bo
 			if deepValueEqualIgnoreOrder(v1.Index(i), v2.Index(j), visited, depth+1) {
 				foundmatch = true
 				matched[j] = true
+				break
 			}
 		}
 		if !foundmatch {
