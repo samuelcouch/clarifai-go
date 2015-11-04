@@ -1,8 +1,8 @@
 package main
 
 import (
-	//"fmt"
 	"reflect"
+	"sort"
 	"strings"
 	"testing"
 
@@ -34,32 +34,55 @@ var goodModelzBody string = `
  '80893_sorta2': [10.0.4.109:1233, 10.0.4.109:1230, 10.0.5.112:1233]}</pre>
  `
 
-func MakeInterfaceSlice(a []ModelInfo) []interface{} {
-	var s []interface{} = make([]interface{}, len(a))
-	for i, val := range a {
-		s[i] = val
-	}
-	return s
+type ByName []ModelInfo
+
+func (a ByName) Len() int { return len(a) }
+
+func (a ByName) Less(i, j int) bool {
+	return a[i].Name < a[j].Name
+}
+func (a ByName) Swap(i, j int) {
+	a[i], a[j] = a[j], a[i]
 }
 
-// Order-independent test that elements are DeepEqual.
-func ElementsDeepEqual(a []interface{}, b []interface{}) bool {
+// Order-independent test that elements are equal.
+func EqualsIgnoreOrder(a, b []ModelInfo) bool {
 	if len(a) != len(b) {
 		return false
 	}
-	for vala := range a {
-		found := false
-		for valb := range b {
-			if reflect.DeepEqual(vala, valb) {
-				found = true
-				break
-			}
+	var namesa []string
+	for _, v := range a {
+		namesa = append(namesa, v.Name)
+	}
+	var namesb []string
+	for _, v := range b {
+		namesb = append(namesb, v.Name)
+	}
+	if !HasSameElements(namesa, namesb) {
+		return false
+	}
+	m := make(map[string][]string)
+	for _, v := range a {
+		m[v.Name] = v.SupportedOps
+	}
+	for _, v := range b {
+		if _, ok := m[v.Name]; !ok {
+			return false
 		}
-		if !found {
+		if !HasSameElements(v.SupportedOps, m[v.Name]) {
 			return false
 		}
 	}
 	return true
+}
+
+func HasSameElements(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	sort.Strings(a)
+	sort.Strings(b)
+	return reflect.DeepEqual(a, b)
 }
 
 func TestGoodModelz(t *testing.T) {
@@ -71,12 +94,12 @@ func TestGoodModelz(t *testing.T) {
 	resp, _ := getModelsFromModelz()
 	expectedModels := []ModelInfo{
 		ModelInfo{"celeb-v1.1", []string{"facedet", "facedetrec"}},
-		ModelInfo{"default", []string{"embed", "facedet", "facedetrec"}},
+		ModelInfo{"default", []string{"embed", "facedet", "facedetrec", "tag"}},
 		ModelInfo{"general-v1.1", []string{"embed", "facedet", "facedetrec", "tag"}},
 	}
-	if !ElementsDeepEqual(
-		MakeInterfaceSlice(resp.Models),
-		MakeInterfaceSlice(expectedModels)) {
+	sort.Sort(ByName(resp.Models))
+	sort.Sort(ByName(expectedModels))
+	if !EqualsIgnoreOrder(resp.Models, expectedModels) {
 		t.Errorf("Unexpected results: %v vs %v", resp.Models, expectedModels)
 	}
 }
