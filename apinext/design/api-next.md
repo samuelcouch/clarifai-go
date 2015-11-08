@@ -402,6 +402,9 @@ but on Monday it's moved to v2.0, your experience of asking for the predicted ta
 cat will change. Sometimes, this is what you want and sometimes it's not. To help you manage this, we
 will let you ask for our 'latest' (and by implication, greatest) model of each type. But we'll also make it easy for you to ask for the same model day after day when that suits your needs better.
 
+# Dominant Colors
+A color extraction model will return information about dominant colors in an image or sequence of video frames.
+
 # Custom Models
 
 # Model Prediction Feedback
@@ -427,6 +430,12 @@ will let you ask for our 'latest' (and by implication, greatest) model of each t
 
 # Advanced Topics
 
+## Throttling
+
+### Concurrent Request Limits
+Our current throttling scheme doesn't explicitly limit a given client to a number of concurrent requests.
+This might be a good idea.
+
 + Model Sets - Getting Predictions from multiple Models
 + Visual Search
 
@@ -440,14 +449,6 @@ ease of use and efficiency reasons we don't want to force multiple calls per ima
 ```bash
 curl -X GET /models/predict?models=model-id-1,model-id-2
 ```
-
-## 1024-d Embeddings
-
-```bash
-curl -X GET /images/:imageId/embedding1024
-```
-
-## Dominant Colors
 
 # Parking Lot (Deferred Topics)
 These things are in limbo - they've been brought up but really haven't evaluated or resolved in the context of API Next.
