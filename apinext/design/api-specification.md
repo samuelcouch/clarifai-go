@@ -27,13 +27,14 @@ want to offer the same types of capabilities.
 # Related Issues
 
 ## Semantic Versioning
-We've discussed implementing [semantic versioning](http://semver.org/). We haven't really decided on whether or exactly
-how we want to proceed.
+We've discussed implementing [semantic versioning](http://semver.org/). ~~We haven't really decided on whether or exactly
+how we want to proceed.~~
+
+We simply use /v2 in the api endpoint uri.
 
 + in the continuous delivery environment we are building, MAJOR.MINOR.PATCH seems too noisy (dan,jim).
-+ MAJOR.MINOR can work, but does it add value over MAJOR i.e. /v2?
++ MAJOR.MINOR can work, but does it add value over MAJOR i.e. /v2? (nope - see [discussion](https://github.com/Clarifai/go/pull/6/files#r44095347))
 
-For now, we will simply use /v2 in the api endpoint uri.
 
 Issues:
 + we're addressing how the swagger spec is versioned along with the software, open is how *other* docs are versioned alongside
@@ -68,7 +69,12 @@ to specific users and groups. There's a rough draft of a feature flags design [h
 It might be cool to be able to somehow annotate the swagger api spec with feature flags, and then be able to
 serve a different version that includes all and only those endpoints / features that are enabled for the user based
 on the feature flag settings.
- 
+
+The swagger spec describing features enabled for Production will be served by default. If an auth token is provided
+(as it can be when the user is using Dev Hub Next and is logged in), then we can serve the version rendered for the
+logged in user's enabled features.
+
+
 # Parking Lot (Deferred)
 
 ## User and Application Profiles API Version
