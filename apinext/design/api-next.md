@@ -128,6 +128,15 @@ Over time, the set of *model types* will grow, and the set of *models* will grow
 |Model| List Models that make predictions about images | GET /models?input-type=image |  |
 |Model| List Models that predict concepts in images | GET /models?input-type=image,prediction-type=concept |  ||
 
+### Prediction Types
+Currently, prediction type can have the following values.
+
++ tag
++ concept
++ embedding1024d
++ dominantColors
++ boundingBox
+
 ### List the Available Models
 How can we get the list of models that we can use?
 
