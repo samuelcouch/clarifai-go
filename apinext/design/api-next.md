@@ -71,6 +71,7 @@ Highlights:
 
 ## Open Issues
 + resolve ids vs. names convention
++ hy-phens, under_scores, or camelCase [one discussion](http://stackoverflow.com/questions/10302179/hyphen-underscore-or-camelcase-as-word-delimiter-in-uris)
 + define the standard error payload, and the convention for endpoint-specific additional error payload
 + establish a convention for pagination of returned resources
 + establish convention for large bulk operations i.e. the bulk version of /predict
