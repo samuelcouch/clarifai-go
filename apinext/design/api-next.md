@@ -78,6 +78,36 @@ Highlights:
 + establish the convention for long-running operations
 + establish the convention for streaming operations
 
+## Response Formats
+We only provide responses in JSON format. We allow '.json' to be appended to any resource URI to ease compatibility with
+clients that expect to provide the content type suffix.
+
+We do not provide responses in XML, and appending '.xml' to resource URI will result in NOT FOUND errors.
+
+## Exceptions
+Like Stripe, we return conventional HTTP response codes to indicate the success or failure of an API request.
+In general, codes in the ```2xx``` range indicate success, codes in the ```4xx``` range indicate an error that failed given the
+information provided (e.g., a required parameter was omitted, a URL couldn't be accessed, etc.), and codes in the ```5xx``` range
+indicate an error with Stripe's servers (these are rare).
+
+Like Twilio, Clarifai returns exceptions in the HTTP response body when something goes wrong. An exception has the following
+properties:
+
+|Property|Description|
+|--------|-----------|
+|Status	|The HTTP status code for the exception.|
+|Message|	A more descriptive message regarding the exception.|
+|Service| The id/name of the service that encountered the error.|
+|Code| An error code to find help for the exception.|
+|MoreInfo| The URL of Clarifai's documentation for the error code.|
+|Parameter (optional)|For request parameter errors, the name of the parameter|
+|ParameterMessage (optional)|For requests parameter/payload errors, the specific problem encountered with the parameter|
+
+If you receive an exception with status code 400 (invalid request), the 'Code' and 'MoreInfo' properties are useful for debugging what went wrong.
+
+### Debug Mode (Clarifai internal)
+In debug mode, the exception will include a source filename and line number and an optional stacktrace.
+
 ## Resource Types
 The API exposes many resource types. Some correspond directly to 'objects' in the traditional sense and so are straightforward media representations of those objects. Some are *algorithmic resources* notably *models* and *query services*. Models make *predictions* of various types, and so they support a */predict* resource. The supported prediction types each have a media representation. *query* or *search* services also return their results in media representations suitable for their particular output. We try to pattern our algorithmic resources after common examples like [google search](www.google.com) and [Google Cloud Platform](https://cloud.google.com/prediction/docs/reference/v1.6/).
 
@@ -128,6 +158,24 @@ Over time, the set of *model types* will grow, and the set of *models* will grow
 |Model| List Concept Models | GET /models?prediction-type=concept |  |
 |Model| List Models that make predictions about images | GET /models?input-type=image |  |
 |Model| List Models that predict concepts in images | GET /models?input-type=image,prediction-type=concept |  ||
+
+### Input Types
+Each model understands input of a particular type e.g. images or video or audio. The current input types are
+
++ image
++ video
+
+todo: resolve how animated GIFs should be treated. While they share some traits of videos, there are semantic differences
+that seem to argue for sugaring the APIs to treat animated GIFs as a sequence of images.
+
+Input types to be supported in the future include:
+
++ text
++ audio
++ compound types
+
+Where compound types are tuples of the base types e.g. (image,text) or (video, audio, text).
+
 
 ### Prediction Types
 Currently, prediction type can have the following values.
@@ -405,26 +453,10 @@ will let you ask for our 'latest' (and by implication, greatest) model of each t
 # Dominant Colors
 A color extraction model will return information about dominant colors in an image or sequence of video frames.
 
-# Custom Models
+# Custom Concept Models
+tbd. for now, see a design discussion [here](https://docs.google.com/document/d/1tAlzIPdJ5fOa6_ZYgj-3SU1JcLYT5l3u-HxwuigKBH4/edit)
 
 # Model Prediction Feedback
-
-# User Media Assets
-+ images
-+ videos
-+ audio
-+ text
-+ compound data types
-
-## Images
-
-## Videos
-
-## Audio
-
-## Text
-
-## Compound Data Types
 
 ## User Metadata
 
