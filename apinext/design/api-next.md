@@ -56,7 +56,7 @@ So, we intend to document examples of each type of endpoint, conventions, errors
 and then expect to continue those patterns into the Swagger spec. If we don't like what's here at the 'resource model'
 or API spec 'sketch' level, there's little point in pursuing the next level of detail.
 
-## Conventions
+## REST Conventions
 We try to follow generally accepted best practices. Of course, there's a fair amount of diversity of opinion on this. We
 have to find our version of _best practices_. A couple of key references we lean on include
 
@@ -70,13 +70,29 @@ Highlights:
 + twitter-like, parse-like 'include=' for controlling returned content / depth
 
 ## Open Issues
-+ resolve ids vs. names convention
++ ~~resolve ids vs. names convention~~
 + hy-phens, under_scores, or camelCase [one discussion](http://stackoverflow.com/questions/10302179/hyphen-underscore-or-camelcase-as-word-delimiter-in-uris)
 + define the standard error payload, and the convention for endpoint-specific additional error payload
 + establish a convention for pagination of returned resources
 + establish convention for large bulk operations i.e. the bulk version of /predict
 + establish the convention for long-running operations
 + establish the convention for streaming operations
+
+## Resource Ids
+We use a common 'id' attribute to uniquely identify resources. If the resource type has a name attribute that users refer to
+it will not be a system-unique key. It will be unique within the user's namespace for the particular resource type. The exact
+format for ids and the id-generation algorithm are TBD, but it will be some convenient guid-like mechanism.
+
+So, a user may not have two models named 'mymodel', but two different users may each have a model named 'mymodel'.
+
+## Resource Ownership
+A key element of the API Next resource model is that most objects created by users are considered to be *owned* by the user
+that creates them. An ACL system will allow the owner to grant permissions e.g. 'make public'.
+
+Owned resources will have an 'ownerId' attribute that is the system-unique resource id of the owning user.
+
+### System Users
+Special user accounts will be the creator/owner of system-provided resources like Clarifai general and domain models.
 
 ## Response Formats
 We only provide responses in JSON format. We allow '.json' to be appended to any resource URI to ease compatibility with
